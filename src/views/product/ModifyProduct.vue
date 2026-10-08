@@ -66,21 +66,38 @@
         <!-- 圖片預覽區塊 -->
         <div class="mt-3 flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
           <div class="flex items-center gap-3">
-            <img id="preview" :src="photoPreview || `${apiBase}/api/public/products/${productId}/photo`"
+            <img id="preview" :src="currentImageSrc"
               class="h-20 w-20 object-contain rounded border border-gray-300 bg-white" alt="商品圖片" @error="
                 (event) => (event.target.src = '/images/no_image_available.jpg')
               " />
             <span class="text-xs text-gray-500">
-              {{ photoPreview ? '新選擇預覽圖' : '目前線上圖片' }}
+              {{ statusText }}
             </span>
           </div>
 
-          <!-- 若有新選圖片，提供取消新圖片的按鈕 -->
-          <button v-if="photoPreview" type="button"
-            class="rounded bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-600 border border-rose-200 transition-colors hover:bg-rose-100 focus:outline-none"
-            @click="clearSelectedPhoto">
-            取消替換圖片
-          </button>
+          <!-- 按鈕選單 -->
+          <div class="flex gap-2">
+            <!-- 情況 1：已有新選圖片 -> 清除新選圖片 -->
+            <button v-if="photoPreview" type="button"
+              class="rounded bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-600 border border-rose-200 transition-colors hover:bg-rose-100 focus:outline-none"
+              @click="clearSelectedPhoto">
+              取消替換圖片
+            </button>
+
+            <!-- 情況 2：無新圖片且未標記刪除 -> 按鈕為「移除圖片」 -->
+            <button v-else-if="!isPhotoRemoved" type="button"
+              class="rounded bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-600 border border-rose-200 transition-colors hover:bg-rose-100 focus:outline-none"
+              @click="removeOriginalPhoto">
+              移除圖片
+            </button>
+
+            <!-- 情況 3：已標記為刪除圖片 -> 按鈕為「復原圖片」 -->
+            <button v-else type="button"
+              class="rounded bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 border border-gray-300 transition-colors hover:bg-gray-200 focus:outline-none"
+              @click="restoreOriginalPhoto">
+              復原原圖片
+            </button>
+          </div>
         </div>
       </div>
 
@@ -105,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { productPublicApi } from "@/api/product/productPublicApi";
 import { productVendorApi } from "@/api/product/productVendorApi";
@@ -119,10 +136,29 @@ const productName = ref("");
 const productDescription = ref("");
 const productPrice = ref("");
 const productQuantity = ref("");
-const productPhoto = ref(null)
+const productPhoto = ref(null);
 const photoPreview = ref(null);
 const fileInput = ref(null);
 const fileInputKey = ref(Date.now());
+const isPhotoRemoved = ref(false); // 標記是否移除圖片
+
+/* 計算目前要顯示的圖片路徑 */
+const currentImageSrc = computed(() => {
+  if (photoPreview.value) {
+    return photoPreview.value; // 1. 優先顯示新選預覽圖
+  }
+  if (isPhotoRemoved.value) {
+    return "/images/no_image_available.jpg"; // 2. 標記移除時顯示預設圖
+  }
+  return `${apiBase}/api/public/products/${productId}/photo`; // 3. 預設顯示線上原圖
+});
+
+/* 計算狀態說明文字 */
+const statusText = computed(() => {
+  if (photoPreview.value) return "新選擇預覽圖";
+  if (isPhotoRemoved.value) return "將移除原圖片";
+  return "目前線上圖片";
+});
 
 /* 獲取商品資訊 */
 const getProduct = async () => {
@@ -134,8 +170,9 @@ const getProduct = async () => {
     productPrice.value = res.price;
     productQuantity.value = res.quantity;
 
-    // 清空手動選擇的圖片狀態
+    // 清空圖片相關狀態
     clearSelectedPhoto();
+    isPhotoRemoved.value = false;
   } catch (error) {
     console.error("獲取商品資料失敗:", error);
   }
@@ -146,6 +183,7 @@ const handlePhotoChange = (event) => {
   const file = event.target.files[0];
   if (file) {
     productPhoto.value = file;
+    isPhotoRemoved.value = false; // 選了新圖片自動撤銷移除狀態
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -157,7 +195,7 @@ const handlePhotoChange = (event) => {
   }
 };
 
-/* 清除新選擇的圖片狀態（還原顯示原本的線上記錄） */
+/* 清除新選擇的圖片狀態（還原狀態） */
 const clearSelectedPhoto = () => {
   productPhoto.value = null;
   photoPreview.value = null;
@@ -167,8 +205,19 @@ const clearSelectedPhoto = () => {
   fileInputKey.value = Date.now();
 };
 
+/* 點擊「移除圖片」按鈕 */
+const removeOriginalPhoto = () => {
+  clearSelectedPhoto();
+  isPhotoRemoved.value = true;
+};
+
+/* 點擊「復原圖片」按鈕 */
+const restoreOriginalPhoto = () => {
+  isPhotoRemoved.value = false;
+};
+
 /* 重設整個表單 */
-const resetForm = getProduct
+const resetForm = getProduct;
 
 /* 修改商品 */
 const modifyProduct = async () => {
@@ -190,7 +239,8 @@ const modifyProduct = async () => {
       productDescription.value,
       productPrice.value,
       productQuantity.value,
-      productPhoto.value
+      productPhoto.value,
+      isPhotoRemoved.value
     );
 
     router.push("/product/manage");
@@ -206,5 +256,3 @@ const modifyProduct = async () => {
 
 onMounted(getProduct);
 </script>
-
-<style scoped></style>

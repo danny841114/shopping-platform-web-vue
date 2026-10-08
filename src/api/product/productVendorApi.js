@@ -21,13 +21,14 @@ export const productVendorApi = {
     return apiClient.post(API_PREFIX, formData);
   },
 
-  updateProduct(id, name, description, price, quantity, photo) {
+  updateProduct(id, name, description, price, quantity, photo, deletePhoto) {
     const formData = new FormData();
 
     formData.append("name", name);
     formData.append("description", description);
     formData.append("price", price);
     formData.append("quantity", quantity);
+    formData.append("deletePhoto", deletePhoto);
     if (photo instanceof File && photo.size > 0) {
       formData.append("photo", photo);
     }
