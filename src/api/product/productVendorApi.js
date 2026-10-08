@@ -1,22 +1,10 @@
-import axios from "axios";
+import apiClient from "../apiClient";
 
-const apiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/vendor/products`,
-  timeout: 10000,
-});
-
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+const API_PREFIX = "/api/vendor/products";
 
 export const productVendorApi = {
   getProductsByVendor() {
-    return apiClient.get("", {
-      withCredentials: true,
-    });
+    return apiClient.get(API_PREFIX);
   },
 
   addProduct(name, description, price, quantity, photo) {
@@ -30,9 +18,7 @@ export const productVendorApi = {
       formData.append("photo", photo);
     }
 
-    return apiClient.post("", formData, {
-      withCredentials: true,
-    });
+    return apiClient.post(API_PREFIX, formData);
   },
 
   updateProduct(id, name, description, price, quantity, photo) {
@@ -46,14 +32,10 @@ export const productVendorApi = {
       formData.append("photo", photo);
     }
 
-    return apiClient.put(`/${id}`, formData, {
-      withCredentials: true,
-    });
+    return apiClient.put(`${API_PREFIX}/${id}`, formData);
   },
 
   deleteProduct(id) {
-    return apiClient.delete(`/${id}`, {
-      withCredentials: true,
-    });
+    return apiClient.delete(`${API_PREFIX}/${id}`);
   },
 };

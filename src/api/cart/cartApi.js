@@ -1,35 +1,21 @@
-import axios from "axios";
+import apiClient from "../apiClient";
 
-const apiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/member/cart/items`,
-  timeout: 10000,
-});
-
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+const API_PREFIX = "/api/member/cart/items";
 
 export const cartApi = {
   getCartItems() {
-    return apiClient.get("", { withCredentials: true });
+    return apiClient.get(API_PREFIX);
   },
 
   updateCartItemQuantity(cartId, quantity) {
-    return apiClient.put(`/${cartId}`, { quantity }, { withCredentials: true });
+    return apiClient.put(`${API_PREFIX}/${cartId}`, { quantity });
   },
 
   deleteCartItem(cartId) {
-    return apiClient.delete(`/${cartId}`, { withCredentials: true });
+    return apiClient.delete(`${API_PREFIX}/${cartId}`);
   },
 
   addCartItem(productId, quantity) {
-    return apiClient.post(
-      "",
-      { productId, quantity },
-      { withCredentials: true }
-    );
+    return apiClient.post(API_PREFIX, { productId, quantity });
   },
 };

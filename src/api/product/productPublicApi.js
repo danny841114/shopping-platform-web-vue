@@ -1,20 +1,10 @@
-import axios from "axios";
+import apiClient from "../apiClient";
 
-const apiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/public/products`,
-  timeout: 10000,
-});
-
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+const API_PREFIX = "/api/public/products";
 
 export const productPublicApi = {
   getProducts(size = 12, page = 0, keyword = "") {
-    return apiClient.get("", {
+    return apiClient.get(API_PREFIX, {
       params: {
         size,
         page,
@@ -24,8 +14,6 @@ export const productPublicApi = {
   },
 
   getProductById(id) {
-    return apiClient.get(`/${id}`, {
-      withCredentials: true,
-    });
+    return apiClient.get(`${API_PREFIX}/${id}`);
   },
 };

@@ -1,21 +1,9 @@
-import axios from "axios";
+import apiClient from "../apiClient";
 
-const apiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/vendor/orders`,
-  timeout: 10000,
-});
-
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+const API_PREFIX = "/api/vendor/orders";
 
 export const orderVendorApi = {
   getOrdersByVendor() {
-    return apiClient.get("", {
-      withCredentials: true,
-    });
+    return apiClient.get(API_PREFIX);
   },
 };

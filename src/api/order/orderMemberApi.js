@@ -1,16 +1,6 @@
-import axios from "axios";
+import apiClient from "../apiClient";
 
-const apiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/member/orders`,
-  timeout: 10000,
-});
-
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+const API_PREFIX = "/api/member/orders";
 
 export const orderMemberApi = {
   addOrder(
@@ -24,26 +14,20 @@ export const orderMemberApi = {
     note,
     shippingFee
   ) {
-    return apiClient.post(
-      "",
-      {
-        cartIds,
-        vendorId,
-        receiverName,
-        receiverPhone,
-        receiverEmail,
-        receiverAddress,
-        paymentMethod,
-        note,
-        shippingFee,
-      },
-      { withCredentials: true }
-    );
+    return apiClient.post(API_PREFIX, {
+      cartIds,
+      vendorId,
+      receiverName,
+      receiverPhone,
+      receiverEmail,
+      receiverAddress,
+      paymentMethod,
+      note,
+      shippingFee,
+    });
   },
 
   getOrdersByMember() {
-    return apiClient.get("", {
-      withCredentials: true,
-    });
+    return apiClient.get(API_PREFIX);
   },
 };

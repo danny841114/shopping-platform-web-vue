@@ -1,33 +1,17 @@
-import axios from "axios";
+import apiClient from "../apiClient";
 
-const apiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/users`,
-  timeout: 10000,
-});
-
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+const API_PREFIX = "/api/users";
 
 export const userApi = {
   fetchMe() {
-    return apiClient.get("/me", { withCredentials: true });
+    return apiClient.get(`${API_PREFIX}/me`);
   },
 
   addVendor() {
-    return apiClient.post("/me/vendor-profile", null, {
-      withCredentials: true,
-    });
+    return apiClient.post(`${API_PREFIX}/me/vendor-profile`);
   },
 
   setRole(role) {
-    return apiClient.put(
-      "/me/active-role",
-      { role },
-      { withCredentials: true }
-    );
+    return apiClient.put(`${API_PREFIX}/me/active-role`, { role });
   },
 };
